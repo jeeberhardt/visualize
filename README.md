@@ -29,7 +29,7 @@ For some reasons I cannot explain (for now), pymol doesn't work with the Anacond
 
 1 . First, you need to start Bokeh and PyMOL
 ```bash
-python run_servers.py #(Yep, that\'s all)
+python run_servers.py #(Yep, that's all)
 ```
 
 2 . Now, this is time to explore your MD trajectory
