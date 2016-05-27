@@ -23,7 +23,13 @@ pip install xmlrpclib mdanalysis
 
 ## PyMOL issue
 
-For some reasons I cannot explain (for now), pymol doesn't work with the Anaconda distribution. So I will recommand you to install PyMOL using the python already installed on your Pc (Ubuntu/Debian or MacOS).
+For some reasons I cannot explain (for now), PyMOL doesn't work with the Anaconda distribution. So I will recommand you to install PyMOL using the python already installed on your Pc (Ubuntu/Debian or MacOS).
+
+Link to PyMOL: https://sourceforge.net/projects/pymol
+
+```bash
+python setup.py build install
+```
 
 ## How-To
 
