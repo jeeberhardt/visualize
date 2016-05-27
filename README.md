@@ -18,7 +18,7 @@ And *screen* command.
 
 I highly recommand you to install the Anaconda distribution (https://www.continuum.io/downloads) if you want a clean python environnment with nearly all the prerequisites already installed (NumPy, Bokeh).
 
-For the rest, you just have to do this,
+For the rest, you just have to do this.
 ```bash
 pip install xmlrpclib mdanalysis
 ```
@@ -51,7 +51,7 @@ python setup.py build install
 
 ## How-To
 
-1 . First, you need to start Bokeh and PyMOL
+1 . First, you need to start Bokeh and PyMOL.
 ```bash
 python run_servers.py #(Yep, that's all)
 ```
@@ -65,6 +65,9 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 * -t/--top: topology file (psf, pdb)
 * -d/--dcd: single trajectory or list of trajectories (dcd, xtc)
 * -c/--configuration: 2D coordinates obtained using your favorite dimensional reduction method (like SPE ?)
+
+**Coordinates file format**
+It's a CSV file with 3 columns: frame_id, x, y
 
 ## Citation
 Soon ...
