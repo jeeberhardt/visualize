@@ -67,7 +67,7 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 * -c/--configuration: 2D coordinates obtained using your favorite dimensional reduction method (like SPE ?)
 
 **Coordinates file format**
-It's a CSV file with 3 columns: frame_id, x, y
+* It's a simple CSV file with 3 columns: frame_id, x, y
 
 ## Citation
 Soon ...
