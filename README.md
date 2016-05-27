@@ -54,7 +54,7 @@ python setup.py build install
 python run_servers.py #(Yep, that's all)
 ```
 
-2 . Now, this is time to explore your MD trajectory
+2 . Now, it's time to explore your MD trajectory !
 ```bash
 python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 ``` 
