@@ -29,7 +29,7 @@ For some reasons I cannot explain (for now), pymol doesn't work with the Anacond
 
 1 . First, you need to start Bokeh and PyMOL
 ```bash
-python run_servers.py (Yep, that's all)
+python run_servers.py #(Yep, that\'s all)
 ```
 
 2 . Now, this is time to explore your MD trajectory
@@ -41,3 +41,9 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 * -t/--top: topology file (psf, pdb)
 * -d/--dcd: single trajectory or list of trajectories (dcd, xtc)
 * -c/--configuration: 2D coordinates obtained using your favorite dimensional reduction method (like SPE ?)
+
+## Citation
+Soon ...
+
+## License
+MIT
