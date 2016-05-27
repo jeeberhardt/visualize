@@ -40,7 +40,7 @@ You should have something like that if you have Anaconda properly installed:
 
 Set the new PATH without Anaconda:
 ```bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 ```
 
 Download PyMOL (https://sourceforge.net/projects/pymol) and install it.
