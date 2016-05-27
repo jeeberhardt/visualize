@@ -38,7 +38,7 @@ You should have something like that if you have Anaconda properly installed:
 /home/eberhardt/Applications/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 ```
 
-Set the new PATH without Anaconda:
+Set the new PATH without Anaconda (**It's an example!**):
 ```bash
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 ```
@@ -56,7 +56,7 @@ python setup.py build install
 python run_servers.py #(Yep, that's all)
 ```
 
-2 . Now, it's time to explore your MD trajectory !
+2 . Now, it's time to explore your MD trajectory!
 ```bash
 python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 ``` 
