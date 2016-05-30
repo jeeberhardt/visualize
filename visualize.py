@@ -83,7 +83,7 @@ def get_comments_from_txt(fname, comments='#'):
 
         return None
 
-def visualize_configuration(top_file, dcd_files, config_file):
+def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025):
 
     # I know this is very nasty ...
     global u
@@ -103,8 +103,6 @@ def visualize_configuration(top_file, dcd_files, config_file):
     except:
         x, y = np.loadtxt(config_file, unpack=True)
         frames = np.arange(0, x.shape[0])
-
-    bin_size = 0.025
 
     # Calculate edges
     xedges = np.arange(np.min(x), np.max(x) + bin_size, bin_size)
@@ -187,6 +185,9 @@ def parse_options():
     parser.add_argument('-c', "--configuration", dest='config_file',
                         required=True, action="store", type=str,
                         help="configuration file")
+    parser.add_argument('-b', "--bin", dest='bin_size', default=0.025,
+                        required=True, action="store", type=float,
+                        help="bin size of the histogram")
 
     args = parser.parse_args()
 
@@ -199,10 +200,11 @@ def main():
     top_file = options.top_file
     dcd_files = options.dcd_files
     config_file = options.config_file
+    bin_size = options.bin_size
 
     if is_screen_running('visu_bokeh') and is_screen_running('visu_pymol'):
         # Visualize embedding
-        visualize_configuration(top_file, dcd_files, config_file)
+        visualize_configuration(top_file, dcd_files, config_file, bin_size)
     else:
         print('Error: Bokeh/PyMOL are not running !')
 
