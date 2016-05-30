@@ -65,7 +65,7 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 * -t/--top: topology file (psf, pdb)
 * -d/--dcd: single trajectory or list of trajectories (dcd, xtc)
 * -c/--configuration: 2D coordinates obtained using your favorite dimensional reduction method (like SPE ?)
-* -b/--bin: size of the histogram's bin
+* -b/--bin: size of the histogram's bin (default: 0.025)
 
 **Coordinates file format**
 * It's a simple CSV file with 3 columns: frame_id, x, y
