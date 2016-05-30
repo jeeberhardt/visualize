@@ -12,7 +12,7 @@ You need, at a minimum:
 * xmlrpclib
 * PyMOL
 
-And *screen* command.
+And *screen* unix command.
 
 ## Installation
 
