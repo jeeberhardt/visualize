@@ -192,10 +192,10 @@ def parse_options():
                         required=True, action="store", type=str,
                         help="configuration file")
     parser.add_argument('-b', "--bin", dest='bin_size', default=0.025,
-                        required=True, action="store", type=float,
+                        action="store", type=float,
                         help="bin size of the histogram")
     parser.add_argument("--cartoon", dest='cartoon', default=False,
-                        required=True, action="store_true",
+                        action="store_true",
                         help="Turn on cartoon representation in PyMOL")
 
     args = parser.parse_args()
