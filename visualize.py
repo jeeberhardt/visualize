@@ -58,7 +58,11 @@ def update_pymol(indices):
                     print('Can\'t load PDB structure !')
                     pass
 
-                pymol.show("ribbon")
+                if cartoon_mode:
+                    pymol.show("cartoon")
+                else:
+                    pymol.show("ribbon")
+
                 pymol.hide("lines")
                 pymol.do("copy s%s, structure" % frame)
                 pymol.delete('structure')
@@ -83,14 +87,16 @@ def get_comments_from_txt(fname, comments='#'):
 
         return None
 
-def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025):
+def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, cartoon=False):
 
     # I know this is very nasty ...
     global u
     global H_frame
     global id_to_H_frame
+    global cartoon_mode
 
     title = None
+    cartoon_mode = cartoon
 
     # Open DCD trajectory
     u = Universe(top_file, dcd_files)
@@ -188,6 +194,9 @@ def parse_options():
     parser.add_argument('-b', "--bin", dest='bin_size', default=0.025,
                         required=True, action="store", type=float,
                         help="bin size of the histogram")
+    parser.add_argument("--cartoon", dest='cartoon', default=False,
+                        required=True, action="store_true",
+                        help="Turn on cartoon representation in PyMOL")
 
     args = parser.parse_args()
 
@@ -201,10 +210,11 @@ def main():
     dcd_files = options.dcd_files
     config_file = options.config_file
     bin_size = options.bin_size
+    cartoon = options.cartoon
 
     if is_screen_running('visu_bokeh') and is_screen_running('visu_pymol'):
         # Visualize embedding
-        visualize_configuration(top_file, dcd_files, config_file, bin_size)
+        visualize_configuration(top_file, dcd_files, config_file, bin_size, cartoon)
     else:
         print('Error: Bokeh/PyMOL are not running !')
 
