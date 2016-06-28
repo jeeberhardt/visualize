@@ -13,6 +13,8 @@ from MDAnalysis import Universe
 from bokeh.client import push_session
 from bokeh.models import HoverTool, ColumnDataSource
 from bokeh.plotting import output_server, figure, curdoc
+from matplotlib.cm import get_cmap
+from matplotlib import colors
 
 def is_screen_running(sname):
     output = subprocess.check_output(["screen -ls; true"], shell=True)
@@ -20,7 +22,6 @@ def is_screen_running(sname):
 
 def update_pymol(indices):
 
-    max_frames = 25
     rpc_port = 9123
     
     if indices:
@@ -33,9 +34,9 @@ def update_pymol(indices):
 
         nb_frames = frames.shape[0]
 
-        if nb_frames > max_frames:
-            print('Too much frames (%s). So we choose %s structures randomly.' % (max_frames, nb_frames))
-            frames = random.sample(frames, max_frames)
+        if nb_frames > mframe:
+            print('Too much frames (%s). So we choose %s structures randomly.' % (mframe, nb_frames))
+            frames = random.sample(frames, mframe)
 
         try:
             pymol = ServerProxy(uri="http://localhost:%s/RPC2" % rpc_port)
@@ -87,16 +88,22 @@ def get_comments_from_txt(fname, comments='#'):
 
         return None
 
-def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, cartoon=False):
+def generate_color(value, cmap):
+    return colors.rgb2hex(get_cmap(cmap)(value))
+
+def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, 
+                            min_bin=0, max_frame=25, cartoon=False):
 
     # I know this is very nasty ...
     global u
     global H_frame
     global id_to_H_frame
     global cartoon_mode
+    global mframe
 
     title = None
     cartoon_mode = cartoon
+    mframe = max_frame
 
     # Open DCD trajectory
     u = Universe(top_file, dcd_files)
@@ -141,12 +148,14 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, ca
     for i in xrange(0, H.shape[0]):
         for j in xrange(0, H.shape[1]):
 
-            if H[i,j] > 0:
+            if H[i,j] > min_bin:
                 xx.append(xedges[i])
                 yy.append(yedges[j])
                 id_to_H_frame.append((i,j))
                 count.append(H[i,j])
-                alpha.append((np.float(H[i,j]) - min_hist) / (max_hist - min_hist))
+
+                value = 1. - (np.float(H[i,j]) - min_hist) / (max_hist - min_hist)
+                alpha.append(generate_color(value, 'jet'))
 
     TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
 
@@ -162,9 +171,8 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, ca
     #p.axis.visible = False
 
     source = ColumnDataSource(data={'xx': xx, 'yy': yy, 'count': count})
-    p.rect('xx', 'yy', width=bin_size, height=bin_size, fill_alpha=alpha,
-           line_alpha=alpha, fill_color='black', line_color='black', 
-           source=source)
+    p.rect('xx', 'yy', width=bin_size, height=bin_size, color=alpha,
+           line_alpha=alpha, line_color='black', source=source)
 
     hover = p.select({'type': HoverTool})
     hover.tooltips = [("(X, Y)", "(@xx @yy)"), ("#Frames", '@count')]
@@ -194,6 +202,12 @@ def parse_options():
     parser.add_argument('-b', "--bin", dest='bin_size', default=0.025,
                         action="store", type=float,
                         help="bin size of the histogram")
+    parser.add_argument("--max-frame", dest='max_frame', default=25,
+                        action="store", type=int,
+                        help="maximum number of randomly picked frames")
+    parser.add_argument("--min-bin", dest='min_bin', default=0,
+                        action="store", type=int,
+                        help="minimal number of frames needed to show the bin")
     parser.add_argument("--cartoon", dest='cartoon', default=False,
                         action="store_true",
                         help="Turn on cartoon representation in PyMOL")
@@ -211,10 +225,12 @@ def main():
     config_file = options.config_file
     bin_size = options.bin_size
     cartoon = options.cartoon
+    max_frame = options.max_frame
+    min_bin = options.min_bin
 
     if is_screen_running('visu_bokeh') and is_screen_running('visu_pymol'):
         # Visualize embedding
-        visualize_configuration(top_file, dcd_files, config_file, bin_size, cartoon)
+        visualize_configuration(top_file, dcd_files, config_file, bin_size, min_bin, max_frame, cartoon)
     else:
         print('Error: Bokeh/PyMOL are not running !')
 
