@@ -16,6 +16,14 @@ from bokeh.plotting import output_server, figure, curdoc
 from matplotlib.cm import get_cmap
 from matplotlib import colors
 
+__author__ = "Jérôme Eberhardt, Roland H Stote, and Annick Dejaegere"
+__copyright__ = "Copyright 2016, Jérôme Eberhardt"
+__credits__ = ["Jérôme Eberhardt", "Roland H Stote", "Annick Dejaegere"]
+
+__lience__ = "MIT"
+__maintainer__ = "Jérôme Eberhardt"
+__email__ = "qksoneo@gmail.com"
+
 def is_screen_running(sname):
     output = subprocess.check_output(["screen -ls; true"], shell=True)
     return [l for l in output.split('\n') if sname in l]
@@ -167,8 +175,6 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title, 
                webgl=True, title_text_font_size='12pt')
-
-    #p.axis.visible = False
 
     source = ColumnDataSource(data={'xx': xx, 'yy': yy, 'count': count})
     p.rect('xx', 'yy', width=bin_size, height=bin_size, color=alpha,

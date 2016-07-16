@@ -6,6 +6,14 @@ import time
 import shlex
 import subprocess
 
+__author__ = "Jérôme Eberhardt, Roland H Stote, and Annick Dejaegere"
+__copyright__ = "Copyright 2016, Jérôme Eberhardt"
+__credits__ = ["Jérôme Eberhardt", "Roland H Stote", "Annick Dejaegere"]
+
+__lience__ = "MIT"
+__maintainer__ = "Jérôme Eberhardt"
+__email__ = "qksoneo@gmail.com"
+
 def execute_command(cmd_line):
     args = shlex.split(cmd_line)
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
