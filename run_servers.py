@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+""" Start Pymol and Bokeh server """
+
 from __future__ import print_function
 
 import time
