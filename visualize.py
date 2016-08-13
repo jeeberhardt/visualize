@@ -138,7 +138,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     global cartoon_mode
     global mframe
 
-    title = None
+    title = ""
     cartoon_mode = cartoon
     mframe = max_frame
 
@@ -228,7 +228,6 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
 
     if prm:
-        title = ""
         for key in prm.iterkeys():
             title += "%s: %s " % (key, prm[key])
     else:
