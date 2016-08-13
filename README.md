@@ -71,10 +71,11 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 * --cartoon: Turn on cartoon representation in PyMOL (default: False)
 
 **Coordinates file format**
-* It's a simple txt file with 2, 3 or 4 columns.
-  * 2 columns: [X Y]
-  * 3 columns: [frame_idx X Y]
-  * 4 columns: [frame_idx X Y energy]
+
+It's a simple txt file with 2, 3 or 4 columns:
+ * 2 columns: [X Y]
+ * 3 columns: [frame_idx X Y]
+ * 4 columns: [frame_idx X Y energy]
 
 ## Citation
 Soon ...
