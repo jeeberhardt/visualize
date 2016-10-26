@@ -152,6 +152,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     if data.shape[1] == 2:
         coord = np.fliplr(data[:,0:])
+        frames = np.arange(0,coord.shape[0])
         energy = None
     elif data.shape[1] == 3:
         coord = np.fliplr(data[:,1:])
