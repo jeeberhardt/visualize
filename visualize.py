@@ -85,7 +85,7 @@ def update_pymol(indices):
                 if np.int(frames[0]) != frame and nb_frames > 1:
                     pymol.do("align s%d, s%d" % (frame, frames[0]))
             
-            pymol.do("center")
+            pymol.do("center %s" % frame)
         except:
             print("Connection issue with PyMol! (Cmd: pymol -R)")
 
