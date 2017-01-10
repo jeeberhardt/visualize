@@ -3,9 +3,9 @@ Visualization and exploration of MD trajectories using Bokeh and PyMOL
 
 ## Prerequisites
 
-You need, at a minimum:
+You need, at a minimum (requirements):
 
-* Python 2.7 or later
+* Python 2.7 (only for the moment)
 * NumPy
 * Bokeh
 * MDAnalysis
