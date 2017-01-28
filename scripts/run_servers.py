@@ -16,6 +16,7 @@ __lience__ = "MIT"
 __maintainer__ = "Jérôme Eberhardt"
 __email__ = "qksoneo@gmail.com"
 
+
 def execute_command(cmd_line):
     args = shlex.split(cmd_line)
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -23,18 +24,21 @@ def execute_command(cmd_line):
 
     return output, errors
 
+
 def start_screen_command(cmd, session_name):
     cmd_line = 'screen -d -m -S %s %s' % (session_name, cmd)
     return execute_command(cmd_line)
+
 
 def stop_screen_command(session_name):
     cmd_line = 'screen -S %s -X quit' % session_name
     return execute_command(cmd_line)
 
+
 def main():
 
     try:
-        #Start Bokeh server and PyMOL
+        # Start Bokeh server and PyMOL
         start_screen_command('bokeh serve', 'visu_bokeh')
         start_screen_command('pymol -R', 'visu_pymol')
 

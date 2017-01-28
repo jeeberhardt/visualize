@@ -29,21 +29,23 @@ __lience__ = "MIT"
 __maintainer__ = "Jérôme Eberhardt"
 __email__ = "qksoneo@gmail.com"
 
+
 def is_screen_running(sname):
     output = subprocess.check_output(["screen -ls; true"], shell=True)
     return [l for l in output.split('\n') if sname in l]
 
+
 def update_pymol(indices):
 
     rpc_port = 9123
-    
+
     if indices:
 
         frames = []
 
         for indice in indices:
             i, j = id_to_H_frame[indice]
-            frames = np.concatenate((frames, np.trim_zeros(H_frame[i,j], 'b')))
+            frames = np.concatenate((frames, np.trim_zeros(H_frame[i, j], 'b')))
 
         nb_frames = frames.shape[0]
 
@@ -84,30 +86,34 @@ def update_pymol(indices):
 
                 if np.int(frames[0]) != frame and nb_frames > 1:
                     pymol.do("align s%d, s%d" % (frame, frames[0]))
-            
+
             pymol.do("center %s" % frame)
         except:
             print("Connection issue with PyMol! (Cmd: pymol -R)")
 
+
 def get_selected_frames(attr, old, new):
     update_pymol(new['1d']['indices'])
+
 
 def get_comments_from_txt(fname, comments='#'):
     with open(fname) as f:
         for line in f:
             if comments in line:
-                line = line.replace('%s '% comments, "")
-                return {pname : pvalue for pname, pvalue in zip(line.split(' ')[::2], line.split(' ')[1::2])}
+                line = line.replace('%s ' % comments, "")
+                return {pname: pvalue for pname, pvalue in zip(line.split(' ')[::2], line.split(' ')[1::2])}
 
         return None
+
 
 def generate_color(value, cmap):
     return colors.rgb2hex(get_cmap(cmap)(value))
 
+
 def assignbins2D(coordinates, bin_size):
 
-    x_min, x_max = np.min(coordinates[:,0]), np.max(coordinates[:,0])
-    y_min, y_max = np.min(coordinates[:,1]), np.max(coordinates[:,1])
+    x_min, x_max = np.min(coordinates[:, 0]), np.max(coordinates[:, 0])
+    y_min, y_max = np.min(coordinates[:, 1]), np.max(coordinates[:, 1])
 
     x_length = (x_max - x_min)
     y_length = (y_max - y_min)
@@ -127,7 +133,8 @@ def assignbins2D(coordinates, bin_size):
 
     return x_bins, y_bins
 
-def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025, 
+
+def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
                             min_bin=0, max_frame=25, cartoon=False):
 
     # I know this is very nasty ...
@@ -150,17 +157,17 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     data = np.loadtxt(config_file)
 
     if data.shape[1] == 2:
-        coord = np.fliplr(data[:,0:])
-        frames = np.arange(0,coord.shape[0])
+        coord = np.fliplr(data[:, 0:])
+        frames = np.arange(0, coord.shape[0])
         energy = None
     elif data.shape[1] == 3:
-        coord = np.fliplr(data[:,1:])
-        frames = data[:,0]
+        coord = np.fliplr(data[:, 1:])
+        frames = data[:, 0]
         energy = None
     elif data.shape[1] == 4:
-        coord = np.fliplr(data[:,1:3])
-        frames = data[:,0]
-        energy = data[:,3]
+        coord = np.fliplr(data[:, 1:3])
+        frames = data[:, 0]
+        energy = data[:, 3]
     else:
         print('Error: Cannot read coordinates file! (#Columns: %s)' % data.shape[1])
         sys.exit(1)
@@ -169,7 +176,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     edges_x, edges_y = assignbins2D(coord, bin_size)
 
     # Compute an histogram, just to have the maximum bin
-    H, edges_x, edges_y = np.histogram2d(coord[:,0], coord[:,1], bins=(edges_x, edges_y))
+    H, edges_x, edges_y = np.histogram2d(coord[:, 0], coord[:, 1], bins=(edges_x, edges_y))
 
     # Initialize histogram array and frame array
     tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
@@ -181,9 +188,9 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     # For each coordinate, we put them in the right bin and add the frame number
     for i in xrange(0, frames.shape[0]):
-        ix = np.int((coord[i,0] - edges_x[0]) / bin_size)
-        iy = np.int((coord[i,1] - edges_y[0]) / bin_size)
-        
+        ix = np.int((coord[i, 0] - edges_x[0]) / bin_size)
+        iy = np.int((coord[i, 1] - edges_y[0]) / bin_size)
+
         H_frame[ix, iy, tmp[ix, iy]] = frames[i]
         if energy is not None:
             H_energy[ix, iy, tmp[ix, iy]] = energy[i]
@@ -193,7 +200,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     if energy is not None:
         # get mean energy per bin
         H_energy = np.nanmean(H_energy, axis=2)
-    
+
     xx, yy = [], []
     id_to_H_frame = []
     count, color, e = [], [], []
@@ -211,17 +218,17 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     for i in xrange(0, H.shape[0]):
         for j in xrange(0, H.shape[1]):
 
-            if H[i,j] > min_bin:
+            if H[i, j] > min_bin:
                 xx.append(edges_x[i])
                 yy.append(edges_y[j])
-                id_to_H_frame.append((i,j))
-                count.append(H[i,j])
+                id_to_H_frame.append((i, j))
+                count.append(H[i, j])
 
                 if energy is None:
-                    value = 1. - (np.float(H[i,j]) - min_hist) / (max_hist - min_hist)
+                    value = 1. - (np.float(H[i, j]) - min_hist) / (max_hist - min_hist)
                 else:
-                    value = (np.float(H_energy[i,j]) - min_hist) / (max_hist - min_hist)
-                    e.append(H_energy[i,j])
+                    value = (np.float(H_energy[i, j]) - min_hist) / (max_hist - min_hist)
+                    e.append(H_energy[i, j])
 
                 color.append(generate_color(value, 'jet'))
 
@@ -233,7 +240,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     else:
         title = '#conformations: %s' % frames.shape[0]
 
-    p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title, 
+    p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title,
                webgl=True, title_text_font_size='12pt')
 
     source = ColumnDataSource(data={'xx': xx, 'yy': yy, 'count': count})
@@ -263,6 +270,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     # Run forever !!
     session.loop_until_closed()
 
+
 def parse_options():
     parser = argparse.ArgumentParser(description='visu 2D configuration')
     parser.add_argument('-t', "--top", dest='top_file', required=True,
@@ -270,7 +278,7 @@ def parse_options():
                         help="psf or pdb file used for simulation")
     parser.add_argument('-d', "--dcd", dest='dcd_files', required=True,
                         action="store", type=str, nargs='+',
-                        help = "list of dcd files")
+                        help="list of dcd files")
     parser.add_argument('-c', "--configuration", dest='config_file',
                         required=True, action="store", type=str,
                         help="configuration file")
@@ -290,6 +298,7 @@ def parse_options():
     args = parser.parse_args()
 
     return args
+
 
 def main():
 
