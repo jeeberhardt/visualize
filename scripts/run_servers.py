@@ -26,12 +26,12 @@ def execute_command(cmd_line):
 
 
 def start_screen_command(cmd, session_name):
-    cmd_line = 'screen -d -m -S %s %s' % (session_name, cmd)
+    cmd_line = "screen -d -m -S %s %s" % (session_name, cmd)
     return execute_command(cmd_line)
 
 
 def stop_screen_command(session_name):
-    cmd_line = 'screen -S %s -X quit' % session_name
+    cmd_line = "screen -S %s -X quit" % session_name
     return execute_command(cmd_line)
 
 
@@ -39,8 +39,8 @@ def main():
 
     try:
         # Start Bokeh server and PyMOL
-        start_screen_command('bokeh serve', 'visu_bokeh')
-        start_screen_command('pymol -R', 'visu_pymol')
+        start_screen_command("bokeh serve", "visu_bokeh")
+        start_screen_command("pymol -R", "visu_pymol")
 
         while True:
             time.sleep(3600)
@@ -50,8 +50,8 @@ def main():
 
     finally:
         # Kill all screen session
-        stop_screen_command('visu_bokeh')
-        stop_screen_command('visu_pymol')
+        stop_screen_command("visu_bokeh")
+        stop_screen_command("visu_pymol")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
