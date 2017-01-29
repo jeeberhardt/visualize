@@ -177,13 +177,15 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     # Compute an histogram, just to have the maximum bin
     H, edges_x, edges_y = np.histogram2d(coord[:, 0], coord[:, 1], bins=(edges_x, edges_y))
+    # ... and replace all zeros by nan
+    H[H == 0.] = np.nan
 
     # Initialize histogram array and frame array
     tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
-    H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.max(H))+100), dtype=np.int32)
+    H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))), dtype=np.int32)
 
     if energy is not None:
-        H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.max(H))+100))
+        H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))))
         H_energy.fill(np.nan)
 
     # For each coordinate, we put them in the right bin and add the frame number
@@ -192,8 +194,10 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
         iy = np.int((coord[i, 1] - edges_y[0]) / bin_size)
 
         H_frame[ix, iy, tmp[ix, iy]] = frames[i]
+
         if energy is not None:
             H_energy[ix, iy, tmp[ix, iy]] = energy[i]
+
         # Add 1 to the corresponding bin
         tmp[ix, iy] += 1
 
@@ -206,8 +210,12 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     count, color, e = [], [], []
 
     if energy is None:
-        min_hist = np.float(np.min(H))
-        max_hist = np.float(np.max(H))
+        if min_bin > 0:
+            min_hist = min_bin
+        else:
+            min_hist = np.float(np.nanmin(H))
+            
+        max_hist = np.float(np.nanmax(H))
     else:
         min_hist = np.float(np.nanmin(H_energy))
         max_hist = np.float(np.nanmax(H_energy))
