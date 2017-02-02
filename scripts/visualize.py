@@ -182,10 +182,10 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     # Initialize histogram array and frame array
     tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
-    H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+100), dtype=np.int32)
+    H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10), dtype=np.int32)
 
     if energy is not None:
-        H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+100))
+        H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10))
         H_energy.fill(np.nan)
 
     # For each coordinate, we put them in the right bin and add the frame number
@@ -193,10 +193,10 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
         ix = np.int((coord[i, 0] - edges_x[0]) / bin_size)
         iy = np.int((coord[i, 1] - edges_y[0]) / bin_size)
 
-        #print(H_frame[ix, iy].shape, tmp[ix, iy])
-
+        # Put frame numbers in a histogram too
         H_frame[ix, iy, tmp[ix, iy]] = frames[i]
 
+        # The same for the energy, if we provide them
         if energy is not None:
             H_energy[ix, iy, tmp[ix, iy]] = energy[i]
 
@@ -211,20 +211,22 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     id_to_H_frame = []
     count, color, e = [], [], []
 
+    # Get STD and MEAN conformations/energy
     if energy is None:
-        # Get STD and MEAN conformations per bin
         std = np.nanstd(H)
         mean = np.nanmean(H)
-
-        # Get min_hist and max_hist
-        min_hist = mean - std
-        max_hist = mean + std
-        # Put min_hist equal to min_bin is lower than 0
-        min_hist = min_hist if min_hist > 0 else min_bin
-
     else:
-        min_hist = np.nanmin(H_energy)
-        max_hist = np.nanmax(H_energy)
+        std = np.nanstd(H_energy)
+        mean = np.nanmean(H_energy)
+
+    # Get min_hist and max_hist
+    min_hist = mean - std
+    max_hist = mean + std
+    # Put min_hist equal to min_bin is lower than 0
+    min_hist = min_hist if min_hist > 0 else min_bin
+
+    unit = '#conf.' if energy is None else 'Kcal/mol'
+    print("Min: %s Max: %s (%s)" % (min_hist, max_hist, unit))
 
     # Add we keep only the bin with structure
     for i in xrange(0, H.shape[0]):
@@ -246,6 +248,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
 
+    # Create the title with all the parameters contain in the file
     if prm:
         for key in prm.iterkeys():
             title += "%s: %s " % (key, prm[key])
