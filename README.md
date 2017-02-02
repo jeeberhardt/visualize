@@ -1,6 +1,8 @@
 # MD visualizer
 Visualization and exploration of MD trajectories using Bokeh and PyMOL
 
+![Visualize demo](http://i.imgur.com/8te1x4J.gif)
+
 ## Prerequisites
 
 You need, at a minimum (requirements):
