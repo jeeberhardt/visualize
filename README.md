@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/59821258.svg)](https://zenodo.org/badge/latestdoi/59821258)
+
 # Visualize
 Visualization and exploration tool for MD trajectories using Bokeh and PyMOL
 
@@ -80,7 +82,7 @@ It's a simple txt file with 2, 3 or 4 columns:
  * 4 columns: [frame_idx X Y energy]
 
 ## Citation
-Soon ...
+1. Jérôme Eberhardt, Roland H. Stote, and Annick Dejaegere. (2017) Unrolr: structural clustering of protein conformations using Stochastic Proximity Embedding. (submitted) [![DOI](https://zenodo.org/badge/59821258.svg)](https://zenodo.org/badge/latestdoi/59821258)
 
 ## License
 MIT
