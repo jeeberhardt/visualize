@@ -134,26 +134,14 @@ def assignbins2D(coordinates, bin_size):
     return x_bins, y_bins
 
 
-def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
-                            min_bin=0, max_frame=25, cartoon=False):
+def read_configuration(config_file):
+    """
+    Read configuration file
+    """
+    coord = None
+    frames = None
+    energy = None
 
-    # I know this is very nasty ...
-    global u
-    global H_frame
-    global id_to_H_frame
-    global cartoon_mode
-    global mframe
-
-    title = ""
-    cartoon_mode = cartoon
-    mframe = max_frame
-
-    # Open DCD trajectory
-    u = Universe(top_file, dcd_files)
-    # Get comments from config file
-    prm = get_comments_from_txt(config_file)
-
-    # Read configuration txt file
     data = np.loadtxt(config_file)
 
     if data.shape[1] == 2:
@@ -171,6 +159,30 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     else:
         print("Error: Cannot read coordinates file! (#Columns: %s)" % data.shape[1])
         sys.exit(1)
+
+    return coord, frames, energy
+
+def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
+                            min_bin=0, max_frame=25, cartoon=False):
+
+    # I know this is very nasty ...
+    global u
+    global H_frame
+    global id_to_H_frame
+    global cartoon_mode
+    global mframe
+
+    title = ""
+    cartoon_mode = cartoon
+    mframe = max_frame
+
+    # Open DCD trajectory
+    u = Universe(top_file, dcd_files)
+
+    # Get comments from config file
+    prm = get_comments_from_txt(config_file)
+    # Read configuration and get coord, frames and energy
+    coord, frames, energy = read_configuration(config_file)
 
     # Calculate edges
     edges_x, edges_y = assignbins2D(coord, bin_size)
@@ -213,8 +225,8 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
 
     # Get STD and MEAN conformations/energy
     if energy is None:
-        std = np.nanstd(H)
-        mean = np.nanmean(H)
+        std = np.int(np.nanstd(H))
+        mean = np.int(np.nanmean(H))
     else:
         std = np.nanstd(H_energy)
         mean = np.nanmean(H_energy)
@@ -226,7 +238,7 @@ def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
     min_hist = min_hist if min_hist > 0 else min_bin
 
     unit = '#conf.' if energy is None else 'Kcal/mol'
-    print("Min: %s Max: %s (%s)" % (min_hist, max_hist, unit))
+    print("Min: %8.2f Max: %8.2f (%s)" % (min_hist, max_hist, unit))
 
     # Add we keep only the bin with structure
     for i in xrange(0, H.shape[0]):
