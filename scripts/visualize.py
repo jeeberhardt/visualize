@@ -30,272 +30,277 @@ __maintainer__ = "Jérôme Eberhardt"
 __email__ = "qksoneo@gmail.com"
 
 
-def is_screen_running(sname):
-    output = subprocess.check_output(["screen -ls; true"], shell=True)
-    return [l for l in output.split("\n") if sname in l]
+class Visualize():
 
+    def __init__(self, top_file, dcd_files, config_file):
 
-def update_pymol(indices):
+        # Start Bokeh server
+        if not self.is_screen_running("visu_bokeh"):
+            print("Error: Bokeh is not running")
+            sys.exit(1)
 
-    rpc_port = 9123
+        # Start PyMOL
+        if not self.is_screen_running("visu_pymol"):
+            print("Error: Pymol is not running")
+            sys.exit(1)
 
-    if indices:
+        # Open DCD trajectory
+        self.u = Universe(top_file, dcd_files)
 
-        frames = []
+        # Read configuration file
+        self.comments = self.read_comments(config_file)
+        self.coord, self.frames, self.energy = self.read_configuration(config_file)
 
-        for indice in indices:
-            i, j = id_to_H_frame[indice]
-            frames = np.concatenate((frames, np.trim_zeros(H_frame[i, j], "b")))
+    def is_screen_running(self, sname):
+        output = subprocess.check_output(["screen -ls; true"], shell=True)
+        return [l for l in output.split("\n") if sname in l]
 
-        nb_frames = frames.shape[0]
-
-        if nb_frames > mframe:
-            print("Too much frames (%s). So we choose %s structures randomly." % (mframe, nb_frames))
-            frames = random.sample(frames, mframe)
-
-        try:
-            pymol = ServerProxy(uri="http://localhost:%s/RPC2" % rpc_port)
-
-            pymol.do("delete s*")
-
-            for frame in frames:
-
-                frame = np.int(frame)
-
-                # Go to the frame
-                u.trajectory[frame]
-
-                # Write the PDB file
-                u.atoms.write("structure.pdb")
-
-                try:
-                    pymol.load("%s/structure.pdb" % os.getcwd())
-                except:
-                    print("Can\"t load PDB structure !")
-                    pass
-
-                if cartoon_mode:
-                    pymol.show("cartoon")
-                else:
-                    pymol.show("ribbon")
-
-                pymol.hide("lines")
-                pymol.do("copy s%s, structure" % frame)
-                pymol.delete("structure")
-                pymol.do("show sticks, organic")
-
-                if np.int(frames[0]) != frame and nb_frames > 1:
-                    pymol.do("align s%d, s%d" % (frame, frames[0]))
-
-            pymol.do("center %s" % frame)
-        except:
-            print("Connection issue with PyMol! (Cmd: pymol -R)")
-
-
-def get_selected_frames(attr, old, new):
-    update_pymol(new["1d"]["indices"])
-
-
-def get_comments_from_txt(fname, comments="#"):
-    with open(fname) as f:
-        for line in f:
-            if comments in line:
-                line = line.replace("%s " % comments, "")
-                return {pname: pvalue for pname, pvalue in zip(line.split(" ")[::2], line.split(" ")[1::2])}
-
-        return None
-
-
-def generate_color(value, cmap):
-    return colors.rgb2hex(get_cmap(cmap)(value))
-
-
-def assignbins2D(coordinates, bin_size):
-
-    x_min, x_max = np.min(coordinates[:, 0]), np.max(coordinates[:, 0])
-    y_min, y_max = np.min(coordinates[:, 1]), np.max(coordinates[:, 1])
-
-    x_length = (x_max - x_min)
-    y_length = (y_max - y_min)
-
-    x_center = x_min + (x_length/2)
-    y_center = y_min + (y_length/2)
-
-    if x_length > y_length:
-        x_limit = np.array([x_center-(x_length/2)-0.5, x_center+(x_length/2)+0.5])
-        y_limit = np.array([y_center-(x_length/2)-0.5, y_center+(x_length/2)+0.5])
-    else:
-        x_limit = np.array([x_center-(y_length/2)-0.5, x_center+(y_length/2)+0.5])
-        y_limit = np.array([y_center-(y_length/2)-0.5, y_center+(y_length/2)+0.5])
-
-    x_bins = np.arange(float(x_limit[0]), (float(x_limit[1]) + bin_size), bin_size)
-    y_bins = np.arange(float(y_limit[0]), (float(y_limit[1]) + bin_size), bin_size)
-
-    return x_bins, y_bins
-
-
-def read_configuration(config_file):
-    """
-    Read configuration file
-    """
-    coord = None
-    frames = None
-    energy = None
-
-    data = np.loadtxt(config_file)
-
-    if data.shape[1] == 2:
-        coord = np.fliplr(data[:, 0:])
-        frames = np.arange(0, coord.shape[0])
+    def read_configuration(self, config_file):
+        """
+        Read configuration file
+        """
+        coord = None
+        frames = None
         energy = None
-    elif data.shape[1] == 3:
-        coord = np.fliplr(data[:, 1:])
-        frames = data[:, 0]
-        energy = None
-    elif data.shape[1] == 4:
-        coord = np.fliplr(data[:, 1:3])
-        frames = data[:, 0]
-        energy = data[:, 3]
-    else:
-        print("Error: Cannot read coordinates file! (#Columns: %s)" % data.shape[1])
-        sys.exit(1)
 
-    return coord, frames, energy
+        data = np.loadtxt(config_file)
 
-def visualize_configuration(top_file, dcd_files, config_file, bin_size=0.025,
-                            min_bin=0, max_frame=25, cartoon=False):
+        if data.shape[1] == 2:
+            coord = np.fliplr(data[:, 0:])
+            frames = np.arange(0, coord.shape[0])
+            energy = None
+        elif data.shape[1] == 3:
+            coord = np.fliplr(data[:, 1:])
+            frames = data[:, 0]
+            energy = None
+        elif data.shape[1] == 4:
+            coord = np.fliplr(data[:, 1:3])
+            frames = data[:, 0]
+            energy = data[:, 3]
+        else:
+            print("Error: Cannot read coordinates file! (#Columns: %s)" % data.shape[1])
+            sys.exit(1)
 
-    # I know this is very nasty ...
-    global u
-    global H_frame
-    global id_to_H_frame
-    global cartoon_mode
-    global mframe
+        return coord, frames, energy
 
-    title = ""
-    cartoon_mode = cartoon
-    mframe = max_frame
+    def read_comments(self, fname, comments="#"):
+        with open(fname) as f:
+            for line in f:
+                if comments in line:
+                    line = line.replace("%s " % comments, "")
+                    return {pname: pvalue for pname, pvalue in zip(line.split(" ")[::2], line.split(" ")[1::2])}
 
-    # Open DCD trajectory
-    u = Universe(top_file, dcd_files)
+            return None
 
-    # Get comments from config file
-    prm = get_comments_from_txt(config_file)
-    # Read configuration and get coord, frames and energy
-    coord, frames, energy = read_configuration(config_file)
+    def update_pymol(self, indices):
 
-    # Calculate edges
-    edges_x, edges_y = assignbins2D(coord, bin_size)
+        rpc_port = 9123
 
-    # Compute an histogram, just to have the maximum bin
-    H, edges_x, edges_y = np.histogram2d(coord[:, 0], coord[:, 1], bins=(edges_x, edges_y))
-    # ... and replace all zeros by nan
-    H[H == 0.] = np.nan
+        if indices:
 
-    # Initialize histogram array and frame array
-    tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
-    H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10), dtype=np.int32)
+            frames = []
 
-    if energy is not None:
-        H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10))
-        H_energy.fill(np.nan)
+            for indice in indices:
+                i, j = self.id_to_H_frame[indice]
+                frames = np.concatenate((frames, np.trim_zeros(self.H_frame[i, j], "b")))
 
-    # For each coordinate, we put them in the right bin and add the frame number
-    for i in xrange(0, frames.shape[0]):
-        ix = np.int((coord[i, 0] - edges_x[0]) / bin_size)
-        iy = np.int((coord[i, 1] - edges_y[0]) / bin_size)
+            nb_frames = frames.shape[0]
 
-        # Put frame numbers in a histogram too
-        H_frame[ix, iy, tmp[ix, iy]] = frames[i]
+            if nb_frames > self.max_frame:
+                print("Too much frames (%s). So we choose %s structures randomly." % (self.max_frame, nb_frames))
+                frames = random.sample(frames, self.max_frame)
 
-        # The same for the energy, if we provide them
-        if energy is not None:
-            H_energy[ix, iy, tmp[ix, iy]] = energy[i]
+            try:
+                pymol = ServerProxy(uri="http://localhost:%s/RPC2" % rpc_port)
 
-        # Add 1 to the corresponding bin
-        tmp[ix, iy] += 1
+                pymol.do("delete s*")
 
-    if energy is not None:
-        # get mean energy per bin
-        H_energy = np.nanmean(H_energy, axis=2)
+                for frame in frames:
 
-    xx, yy = [], []
-    id_to_H_frame = []
-    count, color, e = [], [], []
+                    frame = np.int(frame)
 
-    # Get STD and MEAN conformations/energy
-    if energy is None:
-        std = np.int(np.nanstd(H))
-        mean = np.int(np.nanmean(H))
-    else:
-        std = np.nanstd(H_energy)
-        mean = np.nanmean(H_energy)
+                    # Go to the frame
+                    self.u.trajectory[frame]
 
-    # Get min_hist and max_hist
-    min_hist = mean - std
-    max_hist = mean + std
-    # Put min_hist equal to min_bin is lower than 0
-    min_hist = min_hist if min_hist > 0 else min_bin
+                    # Write the PDB file
+                    self.u.atoms.write("structure.pdb")
 
-    unit = '#conf.' if energy is None else 'Kcal/mol'
-    print("Min: %8.2f Max: %8.2f (%s)" % (min_hist, max_hist, unit))
+                    try:
+                        pymol.load("%s/structure.pdb" % os.getcwd())
+                    except:
+                        print("Can\"t load PDB structure !")
+                        pass
 
-    # Add we keep only the bin with structure
-    for i in xrange(0, H.shape[0]):
-        for j in xrange(0, H.shape[1]):
+                    if self.cartoon:
+                        pymol.show("cartoon")
+                    else:
+                        pymol.show("ribbon")
 
-            if H[i, j] > min_bin:
-                xx.append(edges_x[i])
-                yy.append(edges_y[j])
-                id_to_H_frame.append((i, j))
-                count.append(H[i, j])
+                    pymol.hide("lines")
+                    pymol.do("copy s%s, structure" % frame)
+                    pymol.delete("structure")
+                    pymol.do("show sticks, organic")
 
-                if energy is None:
-                    value = 1. - (np.float(H[i, j]) - min_hist) / (max_hist - min_hist)
-                else:
-                    value = (np.float(H_energy[i, j]) - min_hist) / (max_hist - min_hist)
-                    e.append(H_energy[i, j])
+                    if np.int(frames[0]) != frame and nb_frames > 1:
+                        pymol.do("align s%d, s%d" % (frame, frames[0]))
 
-                color.append(generate_color(value, "jet"))
+                pymol.do("center %s" % frame)
+            except:
+                print("Connection issue with PyMol! (Cmd: pymol -R)")
 
-    TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
+    def get_selected_frames(self, attr, old, new):
+        self.update_pymol(new["1d"]["indices"])
 
-    # Create the title with all the parameters contain in the file
-    if prm:
-        for key in prm.iterkeys():
-            title += "%s: %s " % (key, prm[key])
-    else:
-        title = "#conformations: %s" % frames.shape[0]
+    def generate_color(sefl, value, cmap):
+        return colors.rgb2hex(get_cmap(cmap)(value))
 
-    p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title,
-               webgl=True, title_text_font_size="12pt")
+    def assignbins2D(self, coordinates, bin_size):
 
-    source = ColumnDataSource(data={"xx": xx, "yy": yy, "count": count})
-    if energy is not None:
-        source.add(e, name="energy")
+        x_min, x_max = np.min(coordinates[:, 0]), np.max(coordinates[:, 0])
+        y_min, y_max = np.min(coordinates[:, 1]), np.max(coordinates[:, 1])
 
-    # Create histogram
-    p.rect("xx", "yy", width=bin_size, height=bin_size, color=color,
-           line_alpha=color, line_color="black", source=source)
+        x_length = (x_max - x_min)
+        y_length = (y_max - y_min)
 
-    # Create Hovertools
-    tooltips = [("(X, Y)", "(@xx @yy)"), ("#Frames", "@count")]
-    if energy is not None:
-        tooltips += [("Energy (Kcal/mol)", "@energy")]
+        x_center = x_min + (x_length/2)
+        y_center = y_min + (y_length/2)
 
-    hover = p.select({"type": HoverTool})
-    hover.tooltips = tooltips
+        if x_length > y_length:
+            x_limit = np.array([x_center-(x_length/2)-0.5, x_center+(x_length/2)+0.5])
+            y_limit = np.array([y_center-(x_length/2)-0.5, y_center+(x_length/2)+0.5])
+        else:
+            x_limit = np.array([x_center-(y_length/2)-0.5, x_center+(y_length/2)+0.5])
+            y_limit = np.array([y_center-(y_length/2)-0.5, y_center+(y_length/2)+0.5])
 
-    output_server("visualize")
+        x_bins = np.arange(float(x_limit[0]), (float(x_limit[1]) + bin_size), bin_size)
+        y_bins = np.arange(float(y_limit[0]), (float(y_limit[1]) + bin_size), bin_size)
 
-    # open a session to keep our local document in sync with server
-    session = push_session(curdoc())
-    # Update data when we select conformations
-    source.on_change("selected", get_selected_frames)
-    # Open the document in a browser
-    session.show(p)
-    # Run forever !!
-    session.loop_until_closed()
+        return x_bins, y_bins
+
+    def show(self, bin_size=0.025, min_bin=0, max_frame=25, cartoon=False):
+
+        # Store some informations
+        self.bin_size = bin_size
+        self.min_bin = min_bin
+        self.max_frame = max_frame
+        self.cartoon = cartoon
+        self.H_frame = None
+        self.id_to_H_frame = None
+
+        # Get edges
+        edges_x, edges_y = self.assignbins2D(self.coord, bin_size)
+
+        # Get 2D histogram, just to have the number of conformation per bin
+        H, edges_x, edges_y = np.histogram2d(self.coord[:, 0], self.coord[:, 1], bins=(edges_x, edges_y))
+        # ... and replace all zeros by nan
+        H[H == 0.] = np.nan
+
+        # Initialize histogram array and frame array
+        tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
+        self.H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10), dtype=np.int32)
+
+        if self.energy is not None:
+            H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10))
+            H_energy.fill(np.nan)
+
+        # For each coordinate, we put them in the right bin and add the frame number
+        for i in xrange(0, self.frames.shape[0]):
+            ix = np.int((self.coord[i, 0] - edges_x[0]) / bin_size)
+            iy = np.int((self.coord[i, 1] - edges_y[0]) / bin_size)
+
+            # Put frame numbers in a histogram too
+            self.H_frame[ix, iy, tmp[ix, iy]] = self.frames[i]
+
+            # The same for the energy, if we provide them
+            if self.energy is not None:
+                H_energy[ix, iy, tmp[ix, iy]] = self.energy[i]
+
+            # Add 1 to the corresponding bin
+            tmp[ix, iy] += 1
+
+        if self.energy is not None:
+            # get mean energy per bin
+            H_energy = np.nanmean(H_energy, axis=2)
+
+        xx, yy = [], []
+        self.id_to_H_frame = []
+        count, color, e = [], [], []
+
+        # Get STD and MEAN conformations/energy
+        if self.energy is not None:
+            std = np.nanstd(H_energy)
+            mean = np.nanmean(H_energy)
+        else:
+            std = np.int(np.nanstd(H))
+            mean = np.int(np.nanmean(H))
+
+        # Get min_hist and max_hist
+        min_hist = mean - std
+        max_hist = mean + std
+        # Put min_hist equal to min_bin is lower than 0
+        min_hist = min_hist if min_hist > 0 else min_bin
+
+        unit = '#conf.' if self.energy is None else 'Kcal/mol'
+        print("Min: %8.2f Max: %8.2f (%s)" % (min_hist, max_hist, unit))
+
+        # Add we keep only the bin with structure
+        for i in xrange(0, H.shape[0]):
+            for j in xrange(0, H.shape[1]):
+
+                if H[i, j] > min_bin:
+                    xx.append(edges_x[i])
+                    yy.append(edges_y[j])
+                    self.id_to_H_frame.append((i, j))
+                    count.append(H[i, j])
+
+                    if self.energy is None:
+                        value = 1. - (np.float(H[i, j]) - min_hist) / (max_hist - min_hist)
+                    else:
+                        value = (np.float(H_energy[i, j]) - min_hist) / (max_hist - min_hist)
+                        e.append(H_energy[i, j])
+
+                    color.append(self.generate_color(value, "jet"))
+
+        TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
+
+        title = ""
+        # Create the title with all the parameters contain in the file
+        if self.comments:
+            for key, value in self.comments.iteritems():
+                title += "%s: %s " % (key, value)
+        else:
+            title = "#conformations: %s" % self.frames.shape[0]
+
+        p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title,
+                   webgl=True, title_text_font_size="12pt")
+
+        # Create source
+        source = ColumnDataSource(data={"xx": xx, "yy": yy, "count": count})
+        if self.energy is not None:
+            source.add(e, name="energy")
+
+        # Create histogram
+        p.rect("xx", "yy", width=bin_size, height=bin_size, color=color,
+               line_alpha=color, line_color="black", source=source)
+
+        # Create Hovertools
+        tooltips = [("(X, Y)", "(@xx @yy)"), ("#Frames", "@count")]
+        if self.energy is not None:
+            tooltips += [("Energy (Kcal/mol)", "@energy")]
+
+        hover = p.select({"type": HoverTool})
+        hover.tooltips = tooltips
+
+        output_server("visualize")
+
+        # open a session to keep our local document in sync with server
+        session = push_session(curdoc())
+        # Update data when we select conformations
+        source.on_change("selected", self.get_selected_frames)
+        # Open the document in a browser
+        session.show(p)
+        # Run forever !!
+        session.loop_until_closed()
 
 
 def parse_options():
@@ -339,11 +344,8 @@ def main():
     max_frame = options.max_frame
     min_bin = options.min_bin
 
-    if is_screen_running("visu_bokeh") and is_screen_running("visu_pymol"):
-        # Visualize embedding
-        visualize_configuration(top_file, dcd_files, config_file, bin_size, min_bin, max_frame, cartoon)
-    else:
-        print("Error: Bokeh/PyMOL are not running !")
+    V = Visualize(top_file, dcd_files, config_file)
+    V.show(bin_size, min_bin, max_frame, cartoon)
 
 if __name__ == "__main__":
     main()
