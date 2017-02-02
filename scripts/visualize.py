@@ -185,7 +185,11 @@ class Visualize():
         self.max_frame = max_frame
         self.cartoon = cartoon
         self.H_frame = None
-        self.id_to_H_frame = None
+        self.id_to_H_frame = []
+
+        title = ""
+        xx, yy = [], []
+        count, color, e = [], [], []
 
         # Get edges
         edges_x, edges_y = self.assignbins2D(self.coord, bin_size)
@@ -221,10 +225,6 @@ class Visualize():
         if self.energy is not None:
             # get mean energy per bin
             H_energy = np.nanmean(H_energy, axis=2)
-
-        xx, yy = [], []
-        self.id_to_H_frame = []
-        count, color, e = [], [], []
 
         # Get STD and MEAN conformations/energy
         if self.energy is not None:
@@ -263,7 +263,6 @@ class Visualize():
 
         TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
 
-        title = ""
         # Create the title with all the parameters contain in the file
         if self.comments:
             for key, value in self.comments.iteritems():
