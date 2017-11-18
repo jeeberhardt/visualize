@@ -29,7 +29,7 @@ pip install xmlrpclib mdanalysis
 
 ## PyMOL issue
 
-**For some reason the server mode (-R) with PyMOL 2.0 doesn't work anymore.**
+**Warning: the server mode (-R) with PyMOL 2.0 doesn't work anymore.**
 
 For some reasons I cannot explain (for now), PyMOL doesn't work with the Anaconda distribution. So I will recommand you to install PyMOL using the python already installed on your Pc (Ubuntu/Debian or MacOS).
 
