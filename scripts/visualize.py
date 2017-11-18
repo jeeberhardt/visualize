@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import random
 import argparse
 import warnings
@@ -16,7 +17,7 @@ from xmlrpclib import ServerProxy
 from MDAnalysis import Universe
 from bokeh.client import push_session
 from bokeh.models import HoverTool, ColumnDataSource
-from bokeh.plotting import output_server, figure, curdoc
+from bokeh.plotting import figure, curdoc
 from matplotlib.cm import get_cmap
 from matplotlib import colors
 
@@ -63,7 +64,7 @@ class Visualize():
         frames = None
         energy = None
 
-        data = np.loadtxt(config_file)
+        data = np.loadtxt(config_file, delimiter=',')
 
         if data.shape[1] == 2:
             coord = np.fliplr(data[:, 0:])
@@ -261,7 +262,7 @@ class Visualize():
 
                     color.append(self.generate_color(value, "jet"))
 
-        TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,resize,reset,hover,crosshair,tap,pan"
+        TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,reset,hover,crosshair,tap,pan"
 
         # Create the title with all the parameters contain in the file
         if self.comments:
@@ -270,17 +271,18 @@ class Visualize():
         else:
             title = "#conformations: %s" % self.frames.shape[0]
 
-        p = figure(plot_width=850, plot_height=850, tools=TOOLS, title=title,
-                   webgl=True, title_text_font_size="12pt")
+        p = figure(plot_width=1500, plot_height=1500, tools=TOOLS, title=title)
+        p.title.text_font_size = '20pt'
 
         # Create source
-        source = ColumnDataSource(data={"xx": xx, "yy": yy, "count": count})
+        source = ColumnDataSource(data=dict(xx=xx, yy=yy, count=count, color=color))
+
         if self.energy is not None:
             source.add(e, name="energy")
 
         # Create histogram
-        p.rect("xx", "yy", width=bin_size, height=bin_size, color=color,
-               line_alpha=color, line_color="black", source=source)
+        p.rect(x="xx", y="yy", source=source, width=bin_size, height=bin_size, 
+               color="color", line_alpha="color", line_color="black")
 
         # Create Hovertools
         tooltips = [("(X, Y)", "(@xx @yy)"), ("#Frames", "@count")]
@@ -289,8 +291,6 @@ class Visualize():
 
         hover = p.select({"type": HoverTool})
         hover.tooltips = tooltips
-
-        output_server("visualize")
 
         # open a session to keep our local document in sync with server
         session = push_session(curdoc())
