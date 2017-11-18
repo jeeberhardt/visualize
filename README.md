@@ -64,7 +64,7 @@ python run_servers.py #(Yep, that's all)
 
 2 . Now, it's time to explore your MD trajectory!
 ```bash
-python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
+python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.csv
 ``` 
 
 **Command line options**
@@ -78,10 +78,10 @@ python visualize.py -t topology.psf -d traj.dcd -c coordinates_2d.txt
 
 **Coordinates file format**
 
-It's a simple txt file with 2, 3 or 4 columns:
- * 2 columns: [X Y]
- * 3 columns: [frame_idx X Y]
- * 4 columns: [frame_idx X Y energy]
+It's a simple csv file with 2, 3 or 4 columns:
+ * 2 columns: [X,Y]
+ * 3 columns: [frame_idx,X,Y]
+ * 4 columns: [frame_idx,X,Y,energy]
 
 ## Citation
 1. Jérôme Eberhardt. (2017, February 2). jeeberhardt/visualize. Zenodo. http://doi.org/10.5281/zenodo.268039
