@@ -70,6 +70,9 @@ class Visualize():
             coord = np.fliplr(data[:, 0:])
             frames = np.arange(0, coord.shape[0])
             energy = None
+            #print(coord)
+            #print(frames)
+            #print(energy)
         elif data.shape[1] == 3:
             coord = np.fliplr(data[:, 1:])
             frames = data[:, 0]
@@ -108,7 +111,7 @@ class Visualize():
             nb_frames = frames.shape[0]
 
             if nb_frames > self.max_frame:
-                print("Too much frames (%s). So we choose %s structures randomly." % (self.max_frame, nb_frames))
+                print("Too much frames (%s). So we choose %s structures randomly." % (nb_frames, self.max_frame))
                 frames = random.sample(frames, self.max_frame)
 
             try:
@@ -194,11 +197,17 @@ class Visualize():
 
         # Get edges
         edges_x, edges_y = self.assignbins2D(self.coord, bin_size)
+        #print(self.coord)
+        print(edges_x)
+        print(edges_y)
 
         # Get 2D histogram, just to have the number of conformation per bin
         H, edges_x, edges_y = np.histogram2d(self.coord[:, 0], self.coord[:, 1], bins=(edges_x, edges_y))
-        # ... and replace all zeros by nan
+        print(max(self.coord[:,0]))
+        print(max(self.coord[:,1]))
+       # ... and replace all zeros by nan
         H[H == 0.] = np.nan
+        print(H)
 
         # Initialize histogram array and frame array
         tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
