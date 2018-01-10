@@ -197,17 +197,11 @@ class Visualize():
 
         # Get edges
         edges_x, edges_y = self.assignbins2D(self.coord, bin_size)
-        #print(self.coord)
-        print(edges_x)
-        print(edges_y)
 
         # Get 2D histogram, just to have the number of conformation per bin
         H, edges_x, edges_y = np.histogram2d(self.coord[:, 0], self.coord[:, 1], bins=(edges_x, edges_y))
-        print(max(self.coord[:,0]))
-        print(max(self.coord[:,1]))
        # ... and replace all zeros by nan
         H[H == 0.] = np.nan
-        print(H)
 
         # Initialize histogram array and frame array
         tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
