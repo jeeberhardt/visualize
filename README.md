@@ -14,7 +14,7 @@ You need, at a minimum (requirements):
 * Bokeh (=0.12.10)
 * MDAnalysis
 * xmlrpclib
-* PyMOL (< 2.0)
+* PyMOL
 
 And *screen* unix command.
 
@@ -24,35 +24,12 @@ I highly recommand you to install the Anaconda distribution (https://www.continu
 
 For the rest, you just have to do this.
 ```bash
-pip install xmlrpclib mdanalysis
-```
+pip install xmlrpclib 
 
-## PyMOL issue
+conda config --append channels conda-forge
+conda install mdanalysis
 
-**Warning: the server mode (-R) with PyMOL 2.0 doesn't work anymore.**
-
-For some reasons I cannot explain (for now), PyMOL doesn't work with the Anaconda distribution. So I will recommand you to install PyMOL using the python already installed on your Pc (Ubuntu/Debian or MacOS).
-
-**If you already installed Anaconda**, you need to modify the PATH environment variable.
-
-```bash
-echo $PATH
-```
-
-You should have something like that if you have Anaconda properly installed:
-```bash
-/home/eberhardt/Applications/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-```
-
-Set the new PATH without Anaconda (**It's an example!**):
-```bash
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-```
-
-Download PyMOL (https://sourceforge.net/projects/pymol) and install it.
-
-```bash
-python setup.py build install
+conda install -c schrodinger pymol
 ```
 
 ## How-To
