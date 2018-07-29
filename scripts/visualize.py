@@ -148,7 +148,7 @@ class Visualize():
                     if np.int(frames[0]) != frame and nb_frames > 1:
                         pymol.do("align s%d, s%d" % (frame, frames[0]))
 
-                pymol.do("center %s" % frame)
+                pymol.do("center s%s" % frame)
             except:
                 print("Connection issue with PyMol! (Cmd: pymol -R)")
 
@@ -205,26 +205,32 @@ class Visualize():
 
         # Initialize histogram array and frame array
         tmp = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], 1), dtype=np.int32)
-        self.H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10), dtype=np.int32)
+        try:
+            self.H_frame = np.zeros(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))), dtype=np.int32)
+        except MemoryError:
+            print('Error: Histogram too big (memory). Try with a bigger bin size.')
+            sys.exit(1)
 
         if self.energy is not None:
-            H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))+10))
+            H_energy = np.empty(shape=(edges_x.shape[0], edges_y.shape[0], np.int(np.nanmax(H))))
             H_energy.fill(np.nan)
+
+        # Return the indices of the bins to which each value in input array belongs
+        # I don't know why - 1, but it works perfectly like this
+        ix = np.digitize(self.coord[:, 0], edges_x) - 1
+        iy = np.digitize(self.coord[:, 1], edges_y) - 1
 
         # For each coordinate, we put them in the right bin and add the frame number
         for i in xrange(0, self.frames.shape[0]):
-            ix = np.int((self.coord[i, 0] - edges_x[0]) / bin_size)
-            iy = np.int((self.coord[i, 1] - edges_y[0]) / bin_size)
-
             # Put frame numbers in a histogram too
-            self.H_frame[ix, iy, tmp[ix, iy]] = self.frames[i]
+            self.H_frame[ix[i], iy[i], tmp[ix[i], iy[i]]] = self.frames[i]
 
             # The same for the energy, if we provide them
             if self.energy is not None:
-                H_energy[ix, iy, tmp[ix, iy]] = self.energy[i]
+                H_energy[ix[i], iy[i], tmp[ix[i], iy[i]]] = self.energy[i]
 
             # Add 1 to the corresponding bin
-            tmp[ix, iy] += 1
+            tmp[ix[i], iy[i]] += 1
 
         if self.energy is not None:
             # get mean energy per bin
