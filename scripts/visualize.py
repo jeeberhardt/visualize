@@ -18,7 +18,7 @@ from MDAnalysis import Universe
 from bokeh.client import push_session
 from bokeh.models import HoverTool, ColumnDataSource
 from bokeh.plotting import figure, curdoc
-from matplotlib.cm import get_cmap
+from matplotlib import cm
 from matplotlib import colors
 
 warnings.filterwarnings("ignore")
@@ -145,12 +145,21 @@ class Visualize():
                     if np.int(frames[0]) != frame and nb_frames > 1:
                         pymol.do("align s%d, s%d" % (frame, frames[0]))
 
-                pymol.do("center %s" % frame)
+                pymol.do("zoom complete=1")
             except:
                 print("Connection issue with PyMol! (Cmd: pymol -R)")
 
     def get_selected_frames(self, attr, old, new):
-        self.update_pymol(new["1d"]["indices"])
+        self.update_pymol(new)
+
+    def generate_colors(self, values, cmap="viridis", vmin=0, vmax=1):
+        cnorm = colors.Normalize(vmin=vmin, vmax=vmax)
+        scalarmap = cm.ScalarMappable(norm=cnorm, cmap=cmap)
+
+        cval = scalarmap.to_rgba(values)
+        rgb_values = [colors.rgb2hex(v) for v in cval]
+
+        return rgb_values
 
     def generate_color(sefl, value, cmap):
         return colors.rgb2hex(get_cmap(cmap)(value))
@@ -191,6 +200,7 @@ class Visualize():
         title = ""
         xx, yy = [], []
         count, color, e = [], [], []
+        values = []
 
         # Get edges
         edges_x, edges_y = self.assignbins2D(self.coord, bin_size)
@@ -240,6 +250,13 @@ class Visualize():
         max_hist = mean + std
         # Put min_hist equal to min_bin is lower than 0
         min_hist = min_hist if min_hist > 0 else min_bin
+        H_sum = self.coord.shape[0]
+
+        beta = 1.0 / (0.001987 * 345.)
+        pmf = H / np.float32(H_sum)
+        pmf = -(1. / beta) * np.log(pmf + 1E-18) # Avoid 0 in log function
+        pmf[pmf == np.max(pmf)] = np.nan
+        pmf = pmf - np.nanmin(pmf)
 
         unit = '#conf.' if self.energy is None else 'Kcal/mol'
         print("Min: %8.2f Max: %8.2f (%s)" % (min_hist, max_hist, unit))
@@ -255,14 +272,23 @@ class Visualize():
                     count.append(H[i, j])
 
                     if self.energy is None:
-                        value = 1. - (np.float(H[i, j]) - min_hist) / (max_hist - min_hist)
-                    else:
+                        value = pmf[i, j]
+                        e.append(pmf[i, j])
+                        #value = 1. - (np.float(H[i, j]) - min_hist) / (max_hist - min_hist)
+                    else:                        
                         value = (np.float(H_energy[i, j]) - min_hist) / (max_hist - min_hist)
                         e.append(H_energy[i, j])
 
-                    color.append(self.generate_color(value, "jet"))
+                    values.append(value)
 
         TOOLS = "wheel_zoom,box_zoom,undo,redo,box_select,save,reset,hover,crosshair,tap,pan"
+
+        pmf_mean = np.nanmean(pmf)
+        pmf_std = np.nanstd(pmf)
+        pmf_min = pmf_mean - 2 * pmf_std
+        pmf_max = pmf_mean + pmf_std
+        print(pmf_mean, pmf_std, pmf_min, pmf_max)
+        color = self.generate_colors(values, "viridis", 1.5, 3.5)
 
         # Create the title with all the parameters contain in the file
         if self.comments:
@@ -277,8 +303,8 @@ class Visualize():
         # Create source
         source = ColumnDataSource(data=dict(xx=xx, yy=yy, count=count, color=color))
 
-        if self.energy is not None:
-            source.add(e, name="energy")
+        #if self.energy is not None:
+        source.add(e, name="energy")
 
         # Create histogram
         p.rect(x="xx", y="yy", source=source, width=bin_size, height=bin_size, 
@@ -286,8 +312,8 @@ class Visualize():
 
         # Create Hovertools
         tooltips = [("(X, Y)", "(@xx @yy)"), ("#Frames", "@count")]
-        if self.energy is not None:
-            tooltips += [("Energy (Kcal/mol)", "@energy")]
+        #if self.energy is not None:
+        tooltips += [("Energy (Kcal/mol)", "@energy")]
 
         hover = p.select({"type": HoverTool})
         hover.tooltips = tooltips
@@ -295,7 +321,7 @@ class Visualize():
         # open a session to keep our local document in sync with server
         session = push_session(curdoc())
         # Update data when we select conformations
-        source.on_change("selected", self.get_selected_frames)
+        source.selected.on_change("indices", self.get_selected_frames)
         # Open the document in a browser
         session.show(p)
         # Run forever !!
